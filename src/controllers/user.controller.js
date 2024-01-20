@@ -8,8 +8,8 @@ import {Apiresponse} from "../utils/Apiresponse.js"
 const generateAccessAndrefreshToken=async(userId)=>{
     try {
         const user=await User.findById(userId)
-        const accessToken=generateAccessToken()
-        const refreshToken=generateRefreshToken()
+        const accessToken=user.generateAccessToken()
+        const refreshToken=user.generateRefreshToken()
 
         user.refreshToken=refreshToken
         await user.save({validateBeforeSave:false})
@@ -108,7 +108,7 @@ const loginUser=asyncHandler(async(req,res)=>{
 
     const{email,username,password}=req.body
      
-    if(!username || !email){
+    if(!username && !email){
         throw new Apierror(400,"username or password is required")
     }
     const user=await User.findOne({
@@ -121,12 +121,13 @@ const loginUser=asyncHandler(async(req,res)=>{
     if(!ispasswordvalid){
         throw new Apierror(401,"Invalid user credntials ")
     }
-    const {accessToken,refreshToken}=await generateAccessAndrefreshToken(user._id)
+    const {accessToken,refreshToken}=await 
+    generateAccessAndrefreshToken(user._id)
 
-    const loggedInuser=User.findById(user._id).
+    const loggedInuser=await User.findById(user._id).
     select("-password -refreshToken")
 
-    const options={
+    const options={    //only server modified cookies
         httpOnly:true,
         secure:true
     }
